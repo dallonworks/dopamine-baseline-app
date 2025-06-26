@@ -1,0 +1,38 @@
+:root {
+  --accent: #0066ff;
+  --low: #dd4b39;
+  --homeo: #4caf50;
+  --high: #ff9800;
+  font-family: system-ui, sans-serif;
+}
+
+body, html {margin:0; padding:0; height:100%;}
+#app {
+  display:flex; justify-content:center; align-items:center;
+  height:100%;
+}
+
+.card {
+  width: min(480px, 90%);
+  padding: 2rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  background:#fff;
+}
+
+.hidden {display:none;}
+
+.buttons {
+  display:flex; gap:.8rem; margin:1.5rem 0;
+}
+button {
+  flex:1; padding:.9rem .5rem; font-size:1rem;
+  border:none; border-radius:6px; cursor:pointer;
+  background: var(--accent); color:#fff;
+  transition: background .2s;
+}
+button:hover {background:#004ecc;}
+button small {display:block; font-size:.7rem;}
+#restart {margin-top:1.8rem;}
+
+ul {margin:.6rem 1rem;}
