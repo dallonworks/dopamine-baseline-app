@@ -137,31 +137,42 @@ function renderResult(total){
   const zone = total >= 10 ? "high" : total <= -10 ? "low" : "homeo";
   const g = guidance[zone];
 
-  /* Text */
-  stateHead.textContent = g.heading;
-  stateExpl.textContent = g.explainer;
-  actionList.innerHTML = g.actions.map(a=>`<li>${a}</li>`).join("");
+/* ----- new vertical bar with 0 centred on the Y axis ----- */
+if (chartInst) chartInst.destroy();
 
-  /* Chart */
-  if(chartInst) chartInst.destroy();
-  chartInst = new Chart(scoreCtx,{
-    type:"bar",
-    data:{
-      labels:["Score"],
-      datasets:[{
-        data:[total],
-        backgroundColor: zone==="high" ? "#ff9800" : zone==="low" ? "#dd4b39" : "#4caf50",
-        borderWidth:1
-      }]
+chartInst = new Chart(scoreCtx, {
+  type: "bar",                            // default = vertical
+  data: {
+    labels: [" "],                        // single skinny column
+    datasets: [{
+      data: [total],                      // + or – value
+      backgroundColor:
+        zone === "high" ? "#ff9800"
+        : zone === "low" ? "#dd4b39"
+        : "#4caf50",
+      borderWidth: 1,
+      barPercentage: 0.4                  // slimmer bar looks nicer
+    }]
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {                                // Y‑axis now carries the score
+        min: -25,
+        max: 25,
+        ticks: { stepSize: 5 },
+        grid: { color: "#e0e0e0" }
+      },
+      x: {                                // hide the single label
+        display: false
+      }
     },
-    options:{
-      indexAxis:"y",
-      responsive:true,
-      scales:{ x:{ min:-25,max:25,ticks:{ stepSize:5 } } },
-      plugins:{ legend:{ display:false }, tooltip:{ enabled:false } }
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false }
     }
-  });
-}
+  }
+});
 
 /* =========  EVENTS ========= */
 beginBtn.addEventListener("click", startTest);
