@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dopamine Baseline Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
+          defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Question card -->
+    <section id="question-card" class="card hidden">
+      <h2 id="q-number"></h2>
+      <p id="q-text"></p>
+      <div class="buttons">
+        <button data-score="-1">–1<br><small>Below usual</small></button>
+        <button data-score="0">0<br><small>Usual</small></button>
+        <button data-score="1">+1<br><small>Above usual</small></button>
+      </div>
+      <p id="progress"></p>
+    </section>
+
+    <!-- Result card -->
+    <section id="result-card" class="card hidden">
+      <h2>Your Dopamine‑Baseline Snapshot</h2>
+      <canvas id="score-chart" width="320" height="150"></canvas>
+      <h3 id="state-heading"></h3>
+      <p id="state-explainer"></p>
+
+      <h4>Quick actions to rebalance</h4>
+      <ul id="action-list"></ul>
+
+      <button id="restart">Retake test</button>
+    </section>
+
+    <!-- Welcome / intro -->
+    <section id="intro-card" class="card">
+      <h1>Dopamine Baseline Litmus</h1>
+      <p>
+        Answer 25 rapid questions.  Each asks if a marker is below, at, or above
+        your personal norm.  At the end you’ll see where you sit on the
+        <em>baseline curve</em> and practical ways to return to the homeostatic
+        zone.
+      </p>
+      <button id="begin">Start</button>
+    </section>
+
+  </div>
+</body>
+</html>
