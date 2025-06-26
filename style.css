@@ -13,10 +13,10 @@ body, html {margin:0; padding:0; height:100%;}
 }
 
 .card {
-  width: min(480px, 90%);
-  padding: 2rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  width:min(480px, 90%);
+  padding:2rem 1.5rem;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
   background:#fff;
 }
 
@@ -28,11 +28,25 @@ body, html {margin:0; padding:0; height:100%;}
 button {
   flex:1; padding:.9rem .5rem; font-size:1rem;
   border:none; border-radius:6px; cursor:pointer;
-  background: var(--accent); color:#fff;
-  transition: background .2s;
+  background:var(--accent); color:#fff;
+  transition:background .2s;
 }
 button:hover {background:#004ecc;}
-button small {display:block; font-size:.7rem;}
 #restart {margin-top:1.8rem;}
 
 ul {margin:.6rem 1rem;}
+
+/* ▼▼ Tooltip styling — NEW ▼▼ */        /* ◀ */
+.tip {position:relative; cursor:help; border-bottom:1px dotted;}  /* ◀ */
+.tiptext {                                 /* ◀ */
+  visibility:hidden; opacity:0;            /* ◀ */
+  width:220px;                             /* ◀ */
+  background:#333; color:#fff;             /* ◀ */
+  text-align:center; padding:.6rem;        /* ◀ */
+  border-radius:6px;                       /* ◀ */
+  position:absolute; z-index:10;           /* ◀ */
+  bottom:125%; left:50%; transform:translateX(-50%); /* ◀ */
+  transition:opacity .2s;                  /* ◀ */
+  font-size:.85rem;                        /* ◀ */
+}                                          
+.tip:hover .tiptext {visibility:visible; opacity:1;} /* ◀ */
