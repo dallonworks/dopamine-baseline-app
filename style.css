@@ -37,6 +37,7 @@ button:hover {background:#004ecc;}
 ul {margin:.6rem 1rem;}
 
 /* ▼▼ Tooltip styling — NEW ▼▼ */        /* ◀ */
+.baseline {font-weight:bold; position:absolute; left:-80px; cursor:help;}
 .tip {position:relative; cursor:help; border-bottom:1px dotted;}  /* ◀ */
 .tiptext {                                 /* ◀ */
   visibility:hidden; opacity:0;            /* ◀ */
