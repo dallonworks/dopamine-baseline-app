@@ -137,3 +137,20 @@ ul {
   .baseline { left: -60px; }
   .tiptext  { max-width: 200px; }
 }
+/* Floating tooltip that follows the cursor over the baseline */
+.floatingTip {
+  position: fixed;           /* follow mouse anywhere */
+  max-width: 260px;
+  background: #333;
+  color: #fff;
+  padding: .6rem;
+  border-radius: 6px;
+  font-size: .85rem;
+  line-height: 1.25;
+  pointer-events: none;      /* lets mouse events pass through */
+  z-index: 9999;
+  transform: translate(-50%, -120%);
+  transition: opacity .15s;
+  opacity: 0;
+}
+.floatingTip.show { opacity: 1; }
