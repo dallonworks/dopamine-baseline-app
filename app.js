@@ -6,8 +6,24 @@
    • Displays a vertical bar chart where the Y‑axis is
      dopamine score (‑25 → +25) and 0 is mid‑axis
    ========================================================= */
+/* =========================================================
+   dopamine‑baseline‑check ─ app.js  (history‑enabled)
+   ========================================================= */
 
-/* --------- 1. Question bank -------------------------------- */
+/* ---------- 0.  Tiny cookie helpers ---------------------- */
+function setCookie (name, value, days = 365) {
+  const d = new Date();
+  d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(value)};expires=${d.toUTCString()};path=/`;
+}
+function getCookie (name) {
+  const prefix = name + "=";
+  return document.cookie.split(";").map(c => c.trim())
+          .filter(c => c.startsWith(prefix))
+          .map(c => decodeURIComponent(c.substring(prefix.length)))[0] || "";
+}
+
+/* ---------- 1.  Question bank (unchanged) ---------------- */
 const questions = [
   /* Energy & Arousal */
   { id: 1,  text: "Right now my physical ENERGY feels…",        opts:["Sluggish","Steady","Bouncy"] },
@@ -45,7 +61,7 @@ const questions = [
   { id:25,  text: "Mental FATIGUE right now…",                  opts:["Heavy","Moderate","Light"] }
 ];
 
-/* --------- 2. Guidance blocks ------------------------------- */
+/* ---------- 2.  Guidance blocks (unchanged) --------------- */
 const guidance = {
   high: {
     heading: "You’re ABOVE baseline",
@@ -81,12 +97,12 @@ const guidance = {
   }
 };
 
-/* --------- 3. State ---------------------------------------- */
+/* ---------- 3.  State ------------------------------------- */
 let currentQ = 0;
 let scores   = [];
 let chartInst;
 
-/* --------- 4. DOM grabs ------------------------------------ */
+/* ---------- 4.  DOM grabs --------------------------------- */
 const introCard   = document.getElementById("intro-card");
 const questionCard= document.getElementById("question-card");
 const resultCard  = document.getElementById("result-card");
@@ -103,19 +119,29 @@ const actionList  = document.getElementById("action-list");
 
 const beginBtn    = document.getElementById("begin");
 const restartBtn  = document.getElementById("restart");
+const prevBtn     = document.getElementById("prevResults");   // new
 
-/* --------- 5. Helper functions ----------------------------- */
+/* ---------- 5.  Helper functions -------------------------- */
 const show = el => el.classList.remove("hidden");
 const hide = el => el.classList.add("hidden");
 
-/* --------- 6. Quiz flow ------------------------------------ */
+/* ---------- 6.  History handling -------------------------- */
+function readHistory () {
+  const raw = getCookie("dopamineHistory");
+  try   { return raw ? JSON.parse(raw) : []; }
+  catch { return []; }
+}
+function writeHistory (arr) {
+  setCookie("dopamineHistory", JSON.stringify(arr));
+}
+
+/* ---------- 7.  Quiz flow --------------------------------- */
 function startTest() {
   currentQ = 0;
   scores   = [];
-  hide(introCard); hide(resultCard); show(questionCard);
+  hide(resultCard); hide(introCard); show(questionCard);
   renderQuestion();
 }
-
 function renderQuestion() {
   const q = questions[currentQ];
   qNumberEl.textContent = `Question ${q.id} / 25`;
@@ -128,74 +154,122 @@ function renderQuestion() {
     b.textContent   = q.opts[idx];
     buttonsWrap.appendChild(b);
   });
-
   progressEl.textContent = `Progress: ${currentQ + 1} / 25`;
 }
-
 function handleAnswer(score) {
   scores.push(Number(score));
   currentQ++;
   if (currentQ < questions.length) renderQuestion();
   else finishTest();
 }
-
 function finishTest() {
   const total = scores.reduce((a, b) => a + b, 0);
+
+  /* ---- store history (keep last 3) ---- */
+  const history = readHistory();
+  history.push({ ts: Date.now(), score: total });
+  history.sort((a, b) => a.ts - b.ts);
+  const trimmed = history.slice(-3);
+  writeHistory(trimmed);
+
   hide(questionCard);
-  renderResult(total);
+  renderResult(trimmed);
   show(resultCard);
+  show(prevBtn);                         // make sure button visible now
 }
 
-/* --------- 7. Result rendering & vertical chart ------------ */
-function renderResult(total) {
-  /* a) Determine zone & guidance */
-  const zone = total >= 10 ? "high" : total <= -10 ? "low" : "homeo";
-  const g    = guidance[zone];
+/* ---------- 8.  Result rendering & chart ------------------ */
+function renderResult(historyArr) {
+  const latest = historyArr[historyArr.length - 1];
+  const zone   = latest.score >= 10 ? "high"
+               : latest.score <= -10 ? "low"
+               : "homeo";
+  const g      = guidance[zone];
 
   stateHead.textContent = g.heading;
   stateExpl.textContent = g.explainer;
   actionList.innerHTML  = g.actions.map(a => `<li>${a}</li>`).join("");
 
-  /* b) Build / rebuild chart with vertical bar (Y axis = score) */
-  if (chartInst) chartInst.destroy();
+  /* ---- build dataset ---- */
+  const labels = historyArr.map(h =>
+      new Date(h.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+  const data   = historyArr.map(h => h.score);
+  const colors = historyArr.map((h,i) =>
+      i === historyArr.length - 1 ?     // highlight latest
+        (zone === "high" ? "#ff9800" :
+         zone === "low"  ? "#dd4b39" : "#4caf50")
+      : "#888888");
 
+  /* ---- custom plugin to draw soft‑blue baseline ---- */
+  const baselinePlugin = {
+    id: "baseline",
+    afterDraw(chart) {
+      const y = chart.scales.y.getPixelForValue(0);
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.strokeStyle = "#9ecbff";
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.moveTo(chart.scales.x.left, y);
+      ctx.lineTo(chart.scales.x.right, y);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+
+  if (chartInst) chartInst.destroy();
   chartInst = new Chart(scoreCtx, {
-    type: "bar",                               // vertical by default
+    type: "line",
     data: {
-      labels: [" "],
+      labels,
       datasets: [{
-        data: [total],
-        backgroundColor:
-          zone === "high" ? "#ff9800" :
-          zone === "low"  ? "#dd4b39" :
-                            "#4caf50",
-        borderWidth: 1,
-        barPercentage: 0.4
+        label: "Score",
+        data,
+        fill: false,
+        tension: 0,
+        borderColor: "#cccccc",
+        pointBackgroundColor: colors,
+        pointRadius: data.map((_,i)=> i===data.length-1 ? 6 : 4),
+        pointBorderWidth: 1
       }]
     },
     options: {
       responsive: true,
       scales: {
         y: {
-          min: -25,
-          max: 25,
-          ticks: { stepSize: 5 },
-          grid: { color: "#e0e0e0" },
-          title: { display: true, text: "Dopamine score" }
+          min: -25, max: 25,
+          ticks: { stepSize: 5 }
         },
-        x: { display: false }
+        x: { title: { display: true, text: "Today (oldest ↔ newest)" } }
       },
       plugins: {
         legend:  { display: false },
-        tooltip: { enabled: false }
+        tooltip: { enabled: true }      // show value on tap / hover
       }
-    }
+    },
+    plugins: [baselinePlugin]
   });
 }
 
-/* --------- 8. Event listeners ----------------------------- */
-beginBtn.addEventListener("click", startTest);
-restartBtn.addEventListener("click", startTest);
+/* ---------- 9.  Show trend on demand ---------------------- */
+function showPreviousResults() {
+  const hist = readHistory();
+  if (!hist.length) return;             // nothing yet
+  hide(introCard);
+  renderResult(hist.slice(-3));
+  show(resultCard);
+}
+
+/* ---------- 10. Event listeners --------------------------- */
+beginBtn  .addEventListener("click", startTest);
+restartBtn.addEventListener("click", () => {
+  hide(resultCard); show(introCard);
+});
 questionCard.addEventListener("click", e => {
   if (e.target.dataset.score !== undefined) handleAnswer(e.target.dataset.score);
 });
+prevBtn   .addEventListener("click", showPreviousResults);
+
+/* ---------- 11.  On first load ---------------------------- */
+if (readHistory().length) show(prevBtn);
+
